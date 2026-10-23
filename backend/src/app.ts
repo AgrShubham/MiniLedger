@@ -5,6 +5,7 @@ import { clock } from './lib/clock';
 import { errorHandler } from './middleware/errorHandler';
 import { UPLOADS_DIR } from './middleware/upload';
 import { authRoutes } from './modules/auth/routes';
+import { loanRoutes } from './modules/loans/routes';
 
 export function createApp(): express.Application {
   const app = express();
@@ -29,6 +30,9 @@ export function createApp(): express.Application {
 
   // Auth routes
   app.use('/api/auth', authRoutes);
+
+  // Loan routes
+  app.use('/api/loans', loanRoutes);
 
   // Centralized error handler (must be last)
   app.use(errorHandler);
