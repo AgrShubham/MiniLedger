@@ -4,6 +4,7 @@ import path from 'path';
 import { clock } from './lib/clock';
 import { errorHandler } from './middleware/errorHandler';
 import { UPLOADS_DIR } from './middleware/upload';
+import { authRoutes } from './modules/auth/routes';
 
 export function createApp(): express.Application {
   const app = express();
@@ -26,7 +27,8 @@ export function createApp(): express.Application {
     });
   });
 
-  // Future routes (Auth & Loans) will be mounted here in Step 1 & Step 2
+  // Auth routes
+  app.use('/api/auth', authRoutes);
 
   // Centralized error handler (must be last)
   app.use(errorHandler);
