@@ -26,23 +26,7 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-// Placeholder Home screen until Step 2 is wired
-const TemporaryHomeScreen: React.FC = () => {
-  const { user, logout } = useAuth();
-
-  return (
-    <View style={styles.container}>
-      <Text style={styles.welcomeText}>🎉 Authenticated Successfully!</Text>
-      <Text style={styles.phoneText}>Logged in as: {user?.phone}</Text>
-      <Text style={styles.subText}>Step 1 Auth Slice Verified.</Text>
-
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-        <LogOut size={18} color={theme.colors.white} style={{ marginRight: 8 }} />
-        <Text style={styles.logoutButtonText}>Log Out</Text>
-      </TouchableOpacity>
-    </View>
-  );
-};
+import { HomeScreen } from './src/screens/HomeScreen';
 
 const NavigationRoot: React.FC = () => {
   const { token, isLoading } = useAuth();
@@ -61,7 +45,7 @@ const NavigationRoot: React.FC = () => {
         {!token ? (
           <Stack.Screen name="Login" component={LoginScreen} />
         ) : (
-          <Stack.Screen name="Home" component={TemporaryHomeScreen} />
+          <Stack.Screen name="Home" component={HomeScreen} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
