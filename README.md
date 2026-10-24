@@ -202,6 +202,7 @@ All `/api/loans*` endpoints require `Authorization: Bearer <token>`.
 | `GET` | `/api/loans/summary` | Financial aggregates & counts | Returns `totalLent`, `totalRepaid`, `overdueAmount`, `counts` |
 | `GET` | `/api/loans` | List loans with `isOverdue` | Optional query: `?status=ALL\|PENDING\|OVERDUE\|REPAID` |
 | `POST` | `/api/loans` | Create loan (JSON or multipart) | `{ "friendName": "Aman", "amount": 1500, "dueDate": "2026-11-05" }` + optional `receipt` file |
+| `PUT` | `/api/loans/:id` | Edit loan card details & receipt | Optional: `friendName`, `amount`, `dueDate`, `notes`, `receipt` file |
 | `PATCH` | `/api/loans/:id/repay` | Mark loan as repaid | Path param: `id` (UUID) |
 
 ---
@@ -215,10 +216,10 @@ cd backend
 npm test
 ```
 
-### Test Coverage Highlights:
+### Test Coverage Highlights (29 automated tests):
 - **`money.test.ts`**: Conversion between minor and major units, rounding boundaries, float edge cases, validation of decimal places.
 - **`auth.test.ts`**: OTP generation, HMAC verification, attempt throttling (max 5), expiration logic (5-min TTL), single-use consumption, and JWT authentication guard.
-- **`loans.test.ts`**: Loan creation with/without receipt images, overdue boundary checks (`today` vs `yesterday`), user isolation (user A cannot view or repay user B's loans), atomic repayment transitions (409 on duplicate repay), and summary calculation math.
+- **`loans.test.ts`**: Loan creation with/without receipt images, loan updates (`PUT /api/loans/:id`), overdue boundary checks (`today` vs `yesterday`), user isolation (user A cannot view, edit, or repay user B's loans), atomic repayment transitions (409 on duplicate repay), and summary calculation math.
 
 ---
 

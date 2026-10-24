@@ -322,4 +322,63 @@ describe('Loans & Summary Integration Tests', () => {
       });
     });
   });
+
+  describe('PUT /api/loans/:id', () => {
+    it('updates loan fields and returns updated loan', async () => {
+      const createRes = await request(app)
+        .post('/api/loans')
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({ friendName: 'Original Name', amount: 500, dueDate: '2026-11-01', notes: 'Original note' });
+
+      const loanId = createRes.body.id;
+
+      const updateRes = await request(app)
+        .put(`/api/loans/${loanId}`)
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({
+          friendName: 'Updated Name',
+          amount: 750.5,
+          dueDate: '2026-11-20',
+          notes: 'Updated note',
+        });
+
+      expect(updateRes.status).toBe(200);
+      expect(updateRes.body).toMatchObject({
+        id: loanId,
+        friendName: 'Updated Name',
+        amount: 750.5,
+        dueDate: '2026-11-20',
+        notes: 'Updated note',
+      });
+    });
+
+    it('rejects editing another user loan with 404', async () => {
+      const createRes = await request(app)
+        .post('/api/loans')
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({ friendName: 'User A Loan', amount: 500, dueDate: '2026-11-01' });
+
+      const updateRes = await request(app)
+        .put(`/api/loans/${createRes.body.id}`)
+        .set('Authorization', `Bearer ${userBToken}`)
+        .send({ friendName: 'Hacked Name' });
+
+      expect(updateRes.status).toBe(404);
+    });
+
+    it('validates updated inputs and rejects with 400', async () => {
+      const createRes = await request(app)
+        .post('/api/loans')
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({ friendName: 'Valid Loan', amount: 500, dueDate: '2026-11-01' });
+
+      const updateRes = await request(app)
+        .put(`/api/loans/${createRes.body.id}`)
+        .set('Authorization', `Bearer ${userAToken}`)
+        .send({ amount: -100 });
+
+      expect(updateRes.status).toBe(400);
+      expect(updateRes.body.error.code).toBe('VALIDATION_ERROR');
+    });
+  });
 });

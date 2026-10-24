@@ -162,7 +162,7 @@ cd d:\PROJECTS\MiniLedger\backend
 npm test
 ```
 
-### What is tested (26 automated tests):
+### What is tested (29 automated tests):
 1. **`money.test.ts`**:
    - Decimal to integer minor unit conversion (`12.34` -> `1234`).
    - Minor unit to decimal currency (`150050` -> `1500.50`).
@@ -176,8 +176,9 @@ npm test
 3. **`loans.test.ts`**:
    - Loan creation with Zod validation.
    - Multipart receipt image upload and URL generation.
+   - **Loan Edit**: Updates loan details (friend name, amount, due date, notes, receipt), enforces ownership isolation, rejects invalid inputs.
    - **Overdue boundary testing**: Loans due *yesterday* are overdue; loans due *today* are NOT overdue; repaid loans are NEVER overdue.
-   - User ownership isolation (User B cannot see or repay User A's loans).
+   - User ownership isolation (User B cannot see, edit, or repay User A's loans).
    - Atomic status transition with 409 Conflict on double repay.
    - Accurate database sum aggregates (`totalLent`, `totalRepaid`, `overdueAmount`, counts).
 4. **`health.test.ts`**:

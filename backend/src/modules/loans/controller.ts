@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { loansService } from './service';
-import { CreateLoanInput, ListLoansQuery, LoanIdParam } from './schemas';
+import { CreateLoanInput, UpdateLoanInput, ListLoansQuery, LoanIdParam } from './schemas';
 
 export async function createLoanHandler(
   req: Request<unknown, unknown, CreateLoanInput>,
@@ -11,6 +11,21 @@ export async function createLoanHandler(
     const userId = req.user!.id;
     const loan = await loansService.createLoan(userId, req.body, req.file);
     res.status(201).json(loan);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateLoanHandler(
+  req: Request<LoanIdParam, unknown, UpdateLoanInput>,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const userId = req.user!.id;
+    const loanId = req.params.id;
+    const updated = await loansService.updateLoan(userId, loanId, req.body, req.file);
+    res.status(200).json(updated);
   } catch (error) {
     next(error);
   }

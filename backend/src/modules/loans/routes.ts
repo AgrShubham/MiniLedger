@@ -4,11 +4,13 @@ import { validate } from '../../middleware/validate';
 import { uploadReceipt } from '../../middleware/upload';
 import {
   createLoanSchema,
+  updateLoanSchema,
   listLoansQuerySchema,
   loanIdParamSchema,
 } from './schemas';
 import {
   createLoanHandler,
+  updateLoanHandler,
   listLoansHandler,
   markAsRepaidHandler,
   getSummaryHandler,
@@ -31,6 +33,22 @@ router.post(
 );
 
 router.get('/', validate({ query: listLoansQuerySchema }), listLoansHandler);
+
+router.put(
+  '/:id',
+  validate({ params: loanIdParamSchema }),
+  uploadReceipt.single('receipt'),
+  validate({ body: updateLoanSchema }),
+  updateLoanHandler
+);
+
+router.patch(
+  '/:id',
+  validate({ params: loanIdParamSchema }),
+  uploadReceipt.single('receipt'),
+  validate({ body: updateLoanSchema }),
+  updateLoanHandler
+);
 
 router.patch('/:id/repay', validate({ params: loanIdParamSchema }), markAsRepaidHandler);
 

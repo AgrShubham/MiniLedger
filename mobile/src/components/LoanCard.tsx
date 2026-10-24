@@ -16,18 +16,21 @@ import {
   AlertTriangle,
   Receipt,
   Clock,
+  Pencil,
 } from 'lucide-react-native';
 
 interface LoanCardProps {
   loan: Loan;
   onMarkRepaid: (loanId: string) => Promise<void>;
   onViewReceipt: (url: string, friendName: string) => void;
+  onEdit?: (loan: Loan) => void;
 }
 
 export const LoanCard: React.FC<LoanCardProps> = ({
   loan,
   onMarkRepaid,
   onViewReceipt,
+  onEdit,
 }) => {
   const [isRepaying, setIsRepaying] = useState(false);
 
@@ -121,8 +124,19 @@ export const LoanCard: React.FC<LoanCardProps> = ({
           </Text>
         </View>
 
-        {/* Action Buttons: View Receipt & Mark Repaid */}
+        {/* Action Buttons: Edit, View Receipt & Mark Repaid */}
         <View style={styles.actionsRow}>
+          {onEdit ? (
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => onEdit(loan)}
+              activeOpacity={0.7}
+            >
+              <Pencil size={12} color={theme.colors.textMuted} style={{ marginRight: 4 }} />
+              <Text style={styles.editButtonText}>Edit</Text>
+            </TouchableOpacity>
+          ) : null}
+
           {fullReceiptUrl ? (
             <TouchableOpacity
               style={styles.receiptButton}
@@ -288,7 +302,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     flexShrink: 0,
+    flexWrap: 'wrap',
     marginLeft: 'auto',
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: theme.colors.borderLight,
+  },
+  editButtonText: {
+    color: theme.colors.textMuted,
+    fontSize: 11,
+    fontWeight: '600',
   },
   receiptButton: {
     flexDirection: 'row',

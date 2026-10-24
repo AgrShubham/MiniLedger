@@ -17,6 +17,7 @@ import { SummaryCard } from '../components/SummaryCard';
 import { FilterTabs, FilterStatus } from '../components/FilterTabs';
 import { LoanCard } from '../components/LoanCard';
 import { AddLoanModal } from '../components/AddLoanModal';
+import { EditLoanModal } from '../components/EditLoanModal';
 import { ReceiptViewerModal } from '../components/ReceiptViewerModal';
 import { theme } from '../utils/theme';
 import {
@@ -33,6 +34,7 @@ export const HomeScreen: React.FC = () => {
 
   const [filter, setFilter] = useState<FilterStatus>('ALL');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingLoan, setEditingLoan] = useState<Loan | null>(null);
   const [selectedReceipt, setSelectedReceipt] = useState<{
     url: string;
     friendName: string;
@@ -87,6 +89,12 @@ export const HomeScreen: React.FC = () => {
     queryClient.invalidateQueries({ queryKey: ['summary'] });
   };
 
+  const handleEditSuccess = () => {
+    setEditingLoan(null);
+    queryClient.invalidateQueries({ queryKey: ['loans'] });
+    queryClient.invalidateQueries({ queryKey: ['summary'] });
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* Top Header */}
@@ -126,6 +134,7 @@ export const HomeScreen: React.FC = () => {
             loan={item}
             onMarkRepaid={handleMarkRepaid}
             onViewReceipt={(url, friendName) => setSelectedReceipt({ url, friendName })}
+            onEdit={(loan) => setEditingLoan(loan)}
           />
         )}
         contentContainerStyle={styles.listContent}
@@ -197,6 +206,14 @@ export const HomeScreen: React.FC = () => {
         visible={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={handleAddSuccess}
+      />
+
+      {/* Edit Loan Modal */}
+      <EditLoanModal
+        loan={editingLoan}
+        visible={!!editingLoan}
+        onClose={() => setEditingLoan(null)}
+        onSuccess={handleEditSuccess}
       />
 
       {/* Fullscreen Receipt Viewer */}

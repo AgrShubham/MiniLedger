@@ -3,7 +3,7 @@ import { prisma } from '../../lib/prisma';
 import { clock } from '../../lib/clock';
 import { toMinor, toMajor } from '../../lib/money';
 import { NotFoundError, ConflictError } from '../../lib/errors';
-import { CreateLoanInput, ListLoansQuery } from './schemas';
+import { CreateLoanInput, UpdateLoanInput, ListLoansQuery } from './schemas';
 import { serializeLoan, SerializedLoan } from './serializer';
 
 export interface LoansSummary {
@@ -40,6 +40,46 @@ export class LoansService {
     });
 
     return serializeLoan(loan);
+  }
+
+  public async updateLoan(
+    userId: string,
+    loanId: string,
+    input: UpdateLoanInput,
+    file?: Express.Multer.File
+  ): Promise<SerializedLoan> {
+    const existing = await prisma.loan.findFirst({
+      where: { id: loanId, userId },
+    });
+
+    if (!existing) {
+      throw new NotFoundError('Loan not found');
+    }
+
+    const updateData: Prisma.LoanUpdateInput = {};
+
+    if (input.friendName !== undefined) {
+      updateData.friendName = input.friendName;
+    }
+    if (input.amount !== undefined) {
+      updateData.amountMinor = toMinor(input.amount);
+    }
+    if (input.dueDate !== undefined) {
+      updateData.dueDate = new Date(`${input.dueDate}T00:00:00.000Z`);
+    }
+    if (input.notes !== undefined) {
+      updateData.notes = input.notes || null;
+    }
+    if (file) {
+      updateData.receiptPath = file.filename;
+    }
+
+    const updated = await prisma.loan.update({
+      where: { id: loanId },
+      data: updateData,
+    });
+
+    return serializeLoan(updated);
   }
 
   public async listLoans(userId: string, query: ListLoansQuery): Promise<SerializedLoan[]> {

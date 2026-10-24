@@ -145,3 +145,99 @@ export async function createLoan(params: CreateLoanParams): Promise<Loan> {
   }
 }
 
+export interface UpdateLoanParams {
+  friendName?: string;
+  amount?: number;
+  dueDate?: string;
+  notes?: string;
+  receiptUri?: string | null;
+}
+
+export async function updateLoan(loanId: string, params: UpdateLoanParams): Promise<Loan> {
+  const token = await SecureStore.getItemAsync('user_token');
+
+  // Case 1: If a new local receipt image was picked (starts with file:// or content://)
+  if (params.receiptUri && !params.receiptUri.startsWith('http://') && !params.receiptUri.startsWith('https://')) {
+    const uri = params.receiptUri;
+    const filename = uri.split('/').pop() || 'receipt.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const ext = match ? match[1].toLowerCase() : 'jpg';
+    const mimeType = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+
+    const uploadParameters: Record<string, string> = {};
+    if (params.friendName) uploadParameters.friendName = params.friendName.trim();
+    if (params.amount !== undefined) uploadParameters.amount = params.amount.toString();
+    if (params.dueDate) uploadParameters.dueDate = params.dueDate;
+    if (params.notes !== undefined) uploadParameters.notes = params.notes.trim();
+
+    try {
+      const uploadResult = await FileSystem.uploadAsync(
+        `${API_BASE_URL}/api/loans/${loanId}`,
+        uri,
+        {
+          httpMethod: 'PUT',
+          uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+          fieldName: 'receipt',
+          mimeType,
+          parameters: uploadParameters,
+          headers: {
+            Accept: 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        }
+      );
+
+      let data: any;
+      try {
+        data = JSON.parse(uploadResult.body);
+      } catch {
+        data = { message: uploadResult.body };
+      }
+
+      if (uploadResult.status >= 400) {
+        throw new Error(data?.error?.message || data?.message || 'Failed to update loan');
+      }
+
+      return data;
+    } catch (fsErr: any) {
+      console.warn('Native FileSystem upload fallback for update:', fsErr?.message);
+      const fileRes = await fetch(uri);
+      const rawBlob = await fileRes.blob();
+      const blob = new Blob([rawBlob], { type: mimeType });
+
+      const formData = new FormData();
+      if (params.friendName) formData.append('friendName', params.friendName.trim());
+      if (params.amount !== undefined) formData.append('amount', params.amount.toString());
+      if (params.dueDate) formData.append('dueDate', params.dueDate);
+      if (params.notes !== undefined) formData.append('notes', params.notes.trim());
+      formData.append('receipt', blob, filename);
+
+      const response = await fetch(`${API_BASE_URL}/api/loans/${loanId}`, {
+        method: 'PUT',
+        headers: {
+          Accept: 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error?.message || 'Failed to update loan');
+      }
+      return data;
+    }
+  }
+
+  // Case 2: Standard JSON update when no new receipt image is picked
+  const payload: Record<string, any> = {};
+  if (params.friendName) payload.friendName = params.friendName.trim();
+  if (params.amount !== undefined) payload.amount = params.amount;
+  if (params.dueDate) payload.dueDate = params.dueDate;
+  if (params.notes !== undefined) payload.notes = params.notes.trim();
+
+  const response = await apiClient.put<Loan>(`/loans/${loanId}`, payload);
+  return response.data;
+}
+
+
