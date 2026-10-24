@@ -1,12 +1,34 @@
 import axios, { AxiosError } from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 function resolveBaseUrl(): string {
-  // Android Emulator uses 10.0.2.2 to access host PC localhost
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:4000';
+  // 1. Try to dynamically detect the host IP from the Expo Metro bundler connection
+  // When running in Expo Go on a physical device or emulator, hostUri is "IP:8081"
+  const hostUri =
+    Constants.expoConfig?.hostUri ??
+    (Constants as any).manifest2?.extra?.expoClient?.hostUri ??
+    (Constants as any).manifest?.debuggerHost;
+
+  if (hostUri) {
+    const host = hostUri.split(':')[0];
+    if (host && host !== 'localhost' && host !== '127.0.0.1') {
+      return `http://${host}:4000`;
+    }
   }
+
+  // 2. Explicit environment variable if configured
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (envUrl && envUrl.trim()) {
+    return envUrl.trim();
+  }
+
+  // 3. Fallback for Android (physical device LAN or emulator)
+  if (Platform.OS === 'android') {
+    return 'http://192.168.1.13:4000';
+  }
+
   return 'http://localhost:4000';
 }
 
