@@ -31,19 +31,19 @@ export const ThemeToggleButton: React.FC<ThemeToggleButtonProps> = ({
         toValue: isDark ? 1 : 0,
         duration: 350,
         easing: Easing.bezier(0.34, 1.56, 0.64, 1), // Gentle overshoot spring
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.sequence([
         Animated.timing(scaleAnim, {
           toValue: 0.82,
           duration: 100,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.spring(scaleAnim, {
           toValue: 1,
           friction: 4,
           tension: 50,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]),
     ]).start();
