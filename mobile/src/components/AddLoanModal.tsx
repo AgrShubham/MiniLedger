@@ -359,7 +359,9 @@ const styles = StyleSheet.create({
   },
   presetsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
+    rowGap: 6,
     marginTop: 8,
   },
   presetChip: {

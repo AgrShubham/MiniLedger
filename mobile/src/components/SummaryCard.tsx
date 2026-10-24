@@ -45,24 +45,34 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ summary, isLoading }) 
         <View style={styles.metricItem}>
           <View style={styles.metricLabelRow}>
             <ArrowUpRight size={14} color={theme.colors.primaryLight} style={{ marginRight: 4 }} />
-            <Text style={styles.metricLabel}>Total Lent</Text>
+            <Text style={styles.metricLabel} numberOfLines={1}>Total Lent</Text>
           </View>
-          <Text style={[styles.metricValue, { color: theme.colors.text }]} numberOfLines={1}>
+          <Text
+            style={[styles.metricValue, { color: theme.colors.text }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
             {formatCurrency(totalLent)}
           </Text>
-          <Text style={styles.metricSub}>{counts.total} total loans</Text>
+          <Text style={styles.metricSub} numberOfLines={1}>{counts.total} total loans</Text>
         </View>
 
         {/* Total Repaid */}
         <View style={styles.metricItem}>
           <View style={styles.metricLabelRow}>
             <CheckCircle2 size={14} color={theme.colors.successLight} style={{ marginRight: 4 }} />
-            <Text style={styles.metricLabel}>Total Repaid</Text>
+            <Text style={styles.metricLabel} numberOfLines={1}>Total Repaid</Text>
           </View>
-          <Text style={[styles.metricValue, { color: theme.colors.successLight }]} numberOfLines={1}>
+          <Text
+            style={[styles.metricValue, { color: theme.colors.successLight }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
             {formatCurrency(totalRepaid)}
           </Text>
-          <Text style={styles.metricSub}>{counts.repaid} repaid</Text>
+          <Text style={styles.metricSub} numberOfLines={1}>{counts.repaid} repaid</Text>
         </View>
 
         {/* Overdue Amount */}
@@ -78,6 +88,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ summary, isLoading }) 
                 styles.metricLabel,
                 overdueAmount > 0 && { color: theme.colors.dangerLight },
               ]}
+              numberOfLines={1}
             >
               Overdue
             </Text>
@@ -88,6 +99,8 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ summary, isLoading }) 
               { color: overdueAmount > 0 ? theme.colors.dangerLight : theme.colors.textMuted },
             ]}
             numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
           >
             {formatCurrency(overdueAmount)}
           </Text>
@@ -96,6 +109,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ summary, isLoading }) 
               styles.metricSub,
               overdueAmount > 0 && { color: '#FCA5A5' },
             ]}
+            numberOfLines={1}
           >
             {counts.overdue} pending overdue
           </Text>
@@ -145,6 +159,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.full,
     borderWidth: 1,
     borderColor: theme.colors.danger,
+    flexShrink: 1,
   },
   overdueAlertText: {
     color: '#FECACA',
@@ -154,7 +169,7 @@ const styles = StyleSheet.create({
   metricsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 8,
+    gap: 6,
   },
   metricItem: {
     flex: 1,
@@ -162,7 +177,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
     borderColor: theme.colors.borderLight,
-    padding: 10,
+    padding: 8,
+    minWidth: 0,
   },
   overdueMetricItem: {
     borderColor: theme.colors.danger,
@@ -174,17 +190,17 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   metricLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: theme.colors.textMuted,
   },
   metricValue: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     marginBottom: 2,
   },
   metricSub: {
-    fontSize: 10,
+    fontSize: 9,
     color: theme.colors.textDim,
   },
 });

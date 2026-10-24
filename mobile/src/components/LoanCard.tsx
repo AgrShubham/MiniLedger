@@ -56,8 +56,12 @@ export const LoanCard: React.FC<LoanCardProps> = ({
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
           <View style={styles.nameBlock}>
-            <Text style={styles.friendName}>{loan.friendName}</Text>
-            <Text style={styles.dateSubtext}>Due: {formatDate(loan.dueDate)}</Text>
+            <Text style={styles.friendName} numberOfLines={1} ellipsizeMode="tail">
+              {loan.friendName}
+            </Text>
+            <Text style={styles.dateSubtext} numberOfLines={1}>
+              Due: {formatDate(loan.dueDate)}
+            </Text>
           </View>
         </View>
 
@@ -68,6 +72,8 @@ export const LoanCard: React.FC<LoanCardProps> = ({
               isOverdue && { color: theme.colors.dangerLight },
               isRepaid && { color: theme.colors.successLight },
             ]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
           >
             {formatCurrency(loan.amount)}
           </Text>
@@ -109,6 +115,7 @@ export const LoanCard: React.FC<LoanCardProps> = ({
               isOverdue && { color: '#FECACA' },
               isRepaid && { color: '#A7F3D0' },
             ]}
+            numberOfLines={1}
           >
             {statusInfo.text}
           </Text>
@@ -122,7 +129,7 @@ export const LoanCard: React.FC<LoanCardProps> = ({
               onPress={() => onViewReceipt(fullReceiptUrl, loan.friendName)}
               activeOpacity={0.7}
             >
-              <Receipt size={14} color={theme.colors.primaryLight} style={{ marginRight: 4 }} />
+              <Receipt size={13} color={theme.colors.primaryLight} style={{ marginRight: 4 }} />
               <Text style={styles.receiptButtonText}>Receipt</Text>
             </TouchableOpacity>
           ) : null}
@@ -138,7 +145,7 @@ export const LoanCard: React.FC<LoanCardProps> = ({
                 <ActivityIndicator size="small" color={theme.colors.white} />
               ) : (
                 <>
-                  <Check size={14} color={theme.colors.white} style={{ marginRight: 4 }} />
+                  <Check size={13} color={theme.colors.white} style={{ marginRight: 4 }} />
                   <Text style={styles.repayButtonText}>Mark Repaid</Text>
                 </>
               )}
@@ -164,6 +171,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.md,
+    overflow: 'hidden',
   },
   overdueCard: {
     borderColor: theme.colors.danger,
@@ -177,11 +185,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
   },
   friendInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    minWidth: 0,
   },
   avatar: {
     width: 44,
@@ -191,6 +201,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: theme.spacing.md,
+    flexShrink: 0,
   },
   overdueAvatar: {
     backgroundColor: theme.colors.dangerBg,
@@ -205,6 +216,7 @@ const styles = StyleSheet.create({
   },
   nameBlock: {
     flex: 1,
+    minWidth: 0,
   },
   friendName: {
     fontSize: 16,
@@ -219,6 +231,7 @@ const styles = StyleSheet.create({
   amountBlock: {
     alignItems: 'flex-end',
     marginLeft: theme.spacing.sm,
+    flexShrink: 0,
   },
   amountText: {
     fontSize: 18,
@@ -246,6 +259,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   statusPill: {
     flexDirection: 'row',
@@ -254,6 +269,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: theme.borderRadius.full,
     backgroundColor: theme.colors.warningBg,
+    flexShrink: 1,
   },
   overduePill: {
     backgroundColor: theme.colors.dangerBg,
@@ -265,16 +281,19 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#FDE68A',
+    flexShrink: 1,
   },
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
+    flexShrink: 0,
+    marginLeft: 'auto',
   },
   receiptButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: theme.borderRadius.sm,
     backgroundColor: '#1E1B4B',
@@ -283,13 +302,13 @@ const styles = StyleSheet.create({
   },
   receiptButtonText: {
     color: theme.colors.primaryLight,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   repayButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: theme.borderRadius.sm,
     backgroundColor: theme.colors.primary,
@@ -299,7 +318,7 @@ const styles = StyleSheet.create({
   },
   repayButtonText: {
     color: theme.colors.white,
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   repaidConfirmedRow: {
