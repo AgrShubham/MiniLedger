@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { theme } from '../utils/theme';
+import { useTheme } from '../context/ThemeContext';
 
 export type FilterStatus = 'ALL' | 'PENDING' | 'OVERDUE' | 'REPAID';
 
@@ -20,6 +20,8 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({
   onSelectFilter,
   counts,
 }) => {
+  const { theme } = useTheme();
+
   const tabs: { key: FilterStatus; label: string; count?: number; isDanger?: boolean }[] = [
     { key: 'ALL', label: 'All', count: counts?.total },
     { key: 'PENDING', label: 'Pending', count: counts?.pending },
@@ -39,8 +41,18 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({
               key={tab.key}
               style={[
                 styles.tab,
-                isActive && styles.activeTab,
-                isActive && isDangerTab && styles.activeDangerTab,
+                {
+                  backgroundColor: theme.colors.card,
+                  borderColor: theme.colors.border,
+                },
+                isActive && {
+                  backgroundColor: theme.colors.primary,
+                  borderColor: theme.colors.primary,
+                },
+                isActive && isDangerTab && {
+                  backgroundColor: theme.colors.danger,
+                  borderColor: theme.colors.danger,
+                },
               ]}
               onPress={() => onSelectFilter(tab.key)}
               activeOpacity={0.7}
@@ -48,7 +60,8 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({
               <Text
                 style={[
                   styles.tabText,
-                  isActive && styles.activeTabText,
+                  { color: theme.colors.textMuted },
+                  isActive && { color: theme.colors.white, fontWeight: '700' },
                   !isActive && isDangerTab && { color: theme.colors.dangerLight },
                 ]}
               >
@@ -58,15 +71,17 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({
                 <View
                   style={[
                     styles.countBadge,
-                    isActive && styles.activeCountBadge,
-                    isDangerTab && styles.dangerCountBadge,
+                    { backgroundColor: theme.colors.surfaceMuted },
+                    isActive && { backgroundColor: 'rgba(255, 255, 255, 0.25)' },
+                    isDangerTab && !isActive && { backgroundColor: theme.colors.dangerBg },
                   ]}
                 >
                   <Text
                     style={[
                       styles.countText,
-                      isActive && styles.activeCountText,
-                      isDangerTab && { color: '#FECACA' },
+                      { color: theme.colors.textDim },
+                      isActive && { color: theme.colors.white },
+                      isDangerTab && !isActive && { color: theme.colors.dangerText },
                     ]}
                   >
                     {tab.count}
@@ -83,7 +98,7 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: theme.spacing.md,
+    marginBottom: 12,
   },
   scroll: {
     flexDirection: 'row',
@@ -94,47 +109,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 14,
     paddingVertical: 7,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.card,
+    borderRadius: 9999,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  activeTab: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  activeDangerTab: {
-    backgroundColor: theme.colors.danger,
-    borderColor: theme.colors.danger,
   },
   tabText: {
     fontSize: 13,
     fontWeight: '600',
-    color: theme.colors.textMuted,
-  },
-  activeTabText: {
-    color: theme.colors.white,
-    fontWeight: '700',
   },
   countBadge: {
     marginLeft: 6,
     paddingHorizontal: 6,
     paddingVertical: 1,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: '#0F172A',
-  },
-  activeCountBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-  },
-  dangerCountBadge: {
-    backgroundColor: theme.colors.dangerBg,
+    borderRadius: 9999,
   },
   countText: {
     fontSize: 11,
     fontWeight: '700',
-    color: theme.colors.textDim,
-  },
-  activeCountText: {
-    color: theme.colors.white,
   },
 });

@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { theme } from '../utils/theme';
+import { useTheme } from '../context/ThemeContext';
 import { X, AlertCircle } from 'lucide-react-native';
 
 interface ReceiptViewerModalProps {
@@ -23,6 +23,7 @@ export const ReceiptViewerModal: React.FC<ReceiptViewerModalProps> = ({
   friendName,
   onClose,
 }) => {
+  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -38,12 +39,24 @@ export const ReceiptViewerModal: React.FC<ReceiptViewerModalProps> = ({
     <Modal visible={!!imageUrl} transparent animationType="fade" onRequestClose={handleClose}>
       <SafeAreaView style={styles.backdrop}>
         {/* Top bar */}
-        <View style={styles.topBar}>
-          <Text style={styles.title} numberOfLines={1}>
+        <View
+          style={[
+            styles.topBar,
+            {
+              backgroundColor: theme.colors.card,
+              borderBottomColor: theme.colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.title, { color: theme.colors.text }]} numberOfLines={1}>
             Receipt {friendName ? `• ${friendName}` : ''}
           </Text>
-          <TouchableOpacity onPress={handleClose} style={styles.closeButton} activeOpacity={0.7}>
-            <X size={22} color={theme.colors.white} />
+          <TouchableOpacity
+            onPress={handleClose}
+            style={[styles.closeButton, { backgroundColor: theme.colors.surfaceMuted }]}
+            activeOpacity={0.7}
+          >
+            <X size={20} color={theme.colors.text} />
           </TouchableOpacity>
         </View>
 
@@ -51,16 +64,22 @@ export const ReceiptViewerModal: React.FC<ReceiptViewerModalProps> = ({
         <View style={styles.imageContainer}>
           {isLoading && !hasError && (
             <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="large" color={theme.colors.primaryLight} />
-              <Text style={styles.loadingText}>Loading receipt...</Text>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+              <Text style={[styles.loadingText, { color: theme.colors.white }]}>
+                Loading receipt...
+              </Text>
             </View>
           )}
 
           {hasError ? (
             <View style={styles.errorContainer}>
               <AlertCircle size={40} color={theme.colors.danger} />
-              <Text style={styles.errorText}>Failed to load receipt image</Text>
-              <Text style={styles.errorSubtext}>{imageUrl}</Text>
+              <Text style={[styles.errorText, { color: theme.colors.dangerText }]}>
+                Failed to load receipt image
+              </Text>
+              <Text style={[styles.errorSubtext, { color: theme.colors.textMuted }]}>
+                {imageUrl}
+              </Text>
             </View>
           ) : (
             <Image
@@ -85,20 +104,17 @@ export const ReceiptViewerModal: React.FC<ReceiptViewerModalProps> = ({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    backgroundColor: 'rgba(0, 0, 0, 0.92)',
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
-    backgroundColor: '#0A0F1D',
   },
   title: {
-    color: theme.colors.text,
     fontSize: 16,
     fontWeight: '700',
     flex: 1,
@@ -106,14 +122,13 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 8,
-    backgroundColor: '#1E293B',
-    borderRadius: theme.borderRadius.full,
+    borderRadius: 9999,
   },
   imageContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: theme.spacing.md,
+    padding: 16,
   },
   image: {
     width: '100%',
@@ -123,11 +138,10 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   loadingText: {
     marginTop: 12,
-    color: theme.colors.textMuted,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -137,16 +151,13 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   errorText: {
-    color: '#FECACA',
     fontSize: 16,
     fontWeight: '700',
     marginTop: 12,
   },
   errorSubtext: {
-    color: theme.colors.textMuted,
     fontSize: 12,
     marginTop: 6,
     textAlign: 'center',
   },
 });
-

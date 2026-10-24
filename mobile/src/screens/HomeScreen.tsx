@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { fetchLoans, fetchSummary, markLoanAsRepaid, Loan } from '../api/loans';
 import { SummaryCard } from '../components/SummaryCard';
 import { FilterTabs, FilterStatus } from '../components/FilterTabs';
@@ -19,17 +20,19 @@ import { LoanCard } from '../components/LoanCard';
 import { AddLoanModal } from '../components/AddLoanModal';
 import { EditLoanModal } from '../components/EditLoanModal';
 import { ReceiptViewerModal } from '../components/ReceiptViewerModal';
-import { theme } from '../utils/theme';
 import {
   Plus,
   LogOut,
   ShieldCheck,
   Inbox,
   AlertCircle,
+  Sun,
+  Moon,
 } from 'lucide-react-native';
 
 export const HomeScreen: React.FC = () => {
   const { user, logout } = useAuth();
+  const { theme, isDark, toggleTheme } = useTheme();
   const queryClient = useQueryClient();
 
   const [filter, setFilter] = useState<FilterStatus>('ALL');
@@ -66,7 +69,6 @@ export const HomeScreen: React.FC = () => {
   const repayMutation = useMutation({
     mutationFn: (loanId: string) => markLoanAsRepaid(loanId),
     onSuccess: () => {
-      // Invalidate both loans and summary so UI immediately reflects updated financials
       queryClient.invalidateQueries({ queryKey: ['loans'] });
       queryClient.invalidateQueries({ queryKey: ['summary'] });
     },
@@ -96,22 +98,60 @@ export const HomeScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
       {/* Top Header */}
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            backgroundColor: theme.colors.card,
+            borderBottomColor: theme.colors.border,
+          },
+        ]}
+      >
         <View style={styles.headerBrand}>
-          <View style={styles.logoBadge}>
+          <View
+            style={[
+              styles.logoBadge,
+              {
+                backgroundColor: theme.colors.primaryBg,
+                borderColor: theme.colors.border,
+              },
+            ]}
+          >
             <ShieldCheck size={20} color={theme.colors.primary} />
           </View>
           <View>
-            <Text style={styles.brandTitle}>MiniLedger</Text>
-            <Text style={styles.userPhoneText}>{user?.phone}</Text>
+            <Text style={[styles.brandTitle, { color: theme.colors.text }]}>MiniLedger</Text>
+            <Text style={[styles.userPhoneText, { color: theme.colors.textMuted }]}>
+              {user?.phone}
+            </Text>
           </View>
         </View>
 
         <View style={styles.headerActions}>
+          {/* Theme Toggle Button */}
           <TouchableOpacity
-            style={styles.headerAddBtn}
+            style={[
+              styles.iconBtn,
+              {
+                backgroundColor: theme.colors.surfaceMuted,
+                borderColor: theme.colors.border,
+              },
+            ]}
+            onPress={toggleTheme}
+            activeOpacity={0.7}
+            accessibilityLabel={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+          >
+            {isDark ? (
+              <Sun size={17} color={theme.colors.warning} />
+            ) : (
+              <Moon size={17} color={theme.colors.primary} />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.headerAddBtn, { backgroundColor: theme.colors.primary }]}
             onPress={() => setIsAddModalOpen(true)}
             activeOpacity={0.8}
           >
@@ -119,8 +159,19 @@ export const HomeScreen: React.FC = () => {
             <Text style={styles.headerAddBtnText}>Add</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.7}>
-            <LogOut size={18} color={theme.colors.textMuted} />
+          <TouchableOpacity
+            style={[
+              styles.iconBtn,
+              {
+                backgroundColor: theme.colors.surfaceMuted,
+                borderColor: theme.colors.border,
+              },
+            ]}
+            onPress={logout}
+            activeOpacity={0.7}
+            accessibilityLabel="Log out"
+          >
+            <LogOut size={17} color={theme.colors.textMuted} />
           </TouchableOpacity>
         </View>
       </View>
@@ -163,33 +214,46 @@ export const HomeScreen: React.FC = () => {
           isLoansLoading ? (
             <View style={styles.emptyContainer}>
               <ActivityIndicator size="small" color={theme.colors.primary} />
-              <Text style={styles.emptySub}>Loading ledger entries...</Text>
+              <Text style={[styles.emptySub, { color: theme.colors.textMuted }]}>
+                Loading ledger entries...
+              </Text>
             </View>
           ) : isLoansError ? (
             <View style={styles.emptyContainer}>
               <AlertCircle size={36} color={theme.colors.danger} />
-              <Text style={styles.emptyTitle}>Failed to load loans</Text>
-              <Text style={styles.emptySub}>
+              <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
+                Failed to load loans
+              </Text>
+              <Text style={[styles.emptySub, { color: theme.colors.textMuted }]}>
                 {(loansError as any)?.message || 'Please check your connection and try again.'}
               </Text>
-              <TouchableOpacity style={styles.retryBtn} onPress={handleRefresh}>
-                <Text style={styles.retryBtnText}>Retry</Text>
+              <TouchableOpacity
+                style={[
+                  styles.retryBtn,
+                  {
+                    backgroundColor: theme.colors.card,
+                    borderColor: theme.colors.borderLight,
+                  },
+                ]}
+                onPress={handleRefresh}
+              >
+                <Text style={[styles.retryBtnText, { color: theme.colors.text }]}>Retry</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.emptyContainer}>
               <Inbox size={40} color={theme.colors.textDim} />
-              <Text style={styles.emptyTitle}>
+              <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
                 {filter === 'ALL'
                   ? 'No loans recorded yet'
                   : `No ${filter.toLowerCase()} loans found`}
               </Text>
-              <Text style={styles.emptySub}>
+              <Text style={[styles.emptySub, { color: theme.colors.textMuted }]}>
                 Tap the "+ Add" button to record money lent to a friend.
               </Text>
               {filter === 'ALL' && (
                 <TouchableOpacity
-                  style={styles.addFirstBtn}
+                  style={[styles.addFirstBtn, { backgroundColor: theme.colors.primary }]}
                   onPress={() => setIsAddModalOpen(true)}
                 >
                   <Plus size={16} color={theme.colors.white} style={{ marginRight: 6 }} />
@@ -229,17 +293,14 @@ export const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    backgroundColor: theme.colors.card,
   },
   headerBrand: {
     flexDirection: 'row',
@@ -248,63 +309,60 @@ const styles = StyleSheet.create({
   logoBadge: {
     width: 36,
     height: 36,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: '#3730A3',
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
+    borderWidth: 1,
   },
   brandTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: theme.colors.text,
   },
   userPhoneText: {
     fontSize: 11,
-    color: theme.colors.textMuted,
   },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
+  iconBtn: {
+    padding: 8,
+    borderRadius: 6,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerAddBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: theme.borderRadius.sm,
+    borderRadius: 6,
   },
   headerAddBtnText: {
-    color: theme.colors.white,
+    color: '#FFFFFF',
     fontSize: 13,
     fontWeight: '700',
   },
-  logoutBtn: {
-    padding: 8,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: '#0F172A',
-  },
   listContent: {
-    padding: theme.spacing.lg,
+    padding: 16,
     paddingBottom: 40,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
-    paddingHorizontal: theme.spacing.xl,
+    paddingHorizontal: 20,
   },
   emptyTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.colors.text,
     marginTop: 12,
   },
   emptySub: {
     fontSize: 13,
-    color: theme.colors.textMuted,
     textAlign: 'center',
     marginTop: 4,
   },
@@ -312,27 +370,23 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.borderRadius.sm,
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: theme.colors.borderLight,
   },
   retryBtnText: {
-    color: theme.colors.text,
     fontSize: 13,
     fontWeight: '600',
   },
   addFirstBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: 10,
     marginTop: 16,
   },
   addFirstBtnText: {
-    color: theme.colors.white,
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
   },

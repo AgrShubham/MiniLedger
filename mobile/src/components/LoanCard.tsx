@@ -9,7 +9,7 @@ import {
 import { Loan } from '../api/loans';
 import { getFullMediaUrl } from '../api/client';
 import { formatCurrency, formatDate, getInitials, getDueStatusText } from '../utils/format';
-import { theme } from '../utils/theme';
+import { useTheme } from '../context/ThemeContext';
 import {
   Check,
   CheckCircle2,
@@ -32,6 +32,7 @@ export const LoanCard: React.FC<LoanCardProps> = ({
   onViewReceipt,
   onEdit,
 }) => {
+  const { theme } = useTheme();
   const [isRepaying, setIsRepaying] = useState(false);
 
   const isRepaid = loan.status === 'REPAID';
@@ -51,18 +52,54 @@ export const LoanCard: React.FC<LoanCardProps> = ({
   };
 
   return (
-    <View style={[styles.card, isOverdue && styles.overdueCard, isRepaid && styles.repaidCard]}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.colors.card,
+          borderColor: theme.colors.border,
+        },
+        isOverdue && {
+          backgroundColor: theme.colors.dangerCard,
+          borderColor: theme.colors.dangerBorder,
+        },
+        isRepaid && {
+          borderColor: theme.colors.borderLight,
+          opacity: 0.88,
+        },
+      ]}
+    >
       {/* Top row: Friend Avatar & Info + Amount */}
       <View style={styles.topRow}>
         <View style={styles.friendInfoRow}>
-          <View style={[styles.avatar, isOverdue && styles.overdueAvatar, isRepaid && styles.repaidAvatar]}>
-            <Text style={styles.avatarText}>{initials}</Text>
+          <View
+            style={[
+              styles.avatar,
+              { backgroundColor: theme.colors.avatarBg },
+              isOverdue && { backgroundColor: theme.colors.avatarOverdueBg },
+              isRepaid && { backgroundColor: theme.colors.avatarRepaidBg },
+            ]}
+          >
+            <Text
+              style={[
+                styles.avatarText,
+                { color: theme.colors.avatarText },
+                isOverdue && { color: theme.colors.avatarOverdueText },
+                isRepaid && { color: theme.colors.avatarRepaidText },
+              ]}
+            >
+              {initials}
+            </Text>
           </View>
           <View style={styles.nameBlock}>
-            <Text style={styles.friendName} numberOfLines={1} ellipsizeMode="tail">
+            <Text
+              style={[styles.friendName, { color: theme.colors.text }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {loan.friendName}
             </Text>
-            <Text style={styles.dateSubtext} numberOfLines={1}>
+            <Text style={[styles.dateSubtext, { color: theme.colors.textMuted }]} numberOfLines={1}>
               Due: {formatDate(loan.dueDate)}
             </Text>
           </View>
@@ -72,6 +109,7 @@ export const LoanCard: React.FC<LoanCardProps> = ({
           <Text
             style={[
               styles.amountText,
+              { color: theme.colors.text },
               isOverdue && { color: theme.colors.dangerLight },
               isRepaid && { color: theme.colors.successLight },
             ]}
@@ -85,15 +123,23 @@ export const LoanCard: React.FC<LoanCardProps> = ({
 
       {/* Notes if available */}
       {loan.notes ? (
-        <View style={styles.notesContainer}>
-          <Text style={styles.notesText} numberOfLines={2}>
+        <View
+          style={[
+            styles.notesContainer,
+            {
+              backgroundColor: theme.colors.surfaceMuted,
+              borderColor: theme.colors.border,
+            },
+          ]}
+        >
+          <Text style={[styles.notesText, { color: theme.colors.textMuted }]} numberOfLines={2}>
             "{loan.notes}"
           </Text>
         </View>
       ) : null}
 
       {/* Divider */}
-      <View style={styles.divider} />
+      <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
 
       {/* Bottom row: Status badge + Actions */}
       <View style={styles.bottomRow}>
@@ -101,8 +147,9 @@ export const LoanCard: React.FC<LoanCardProps> = ({
         <View
           style={[
             styles.statusPill,
-            isOverdue && styles.overduePill,
-            isRepaid && styles.repaidPill,
+            { backgroundColor: theme.colors.warningBg },
+            isOverdue && { backgroundColor: theme.colors.dangerBg },
+            isRepaid && { backgroundColor: theme.colors.successBg },
           ]}
         >
           {isRepaid ? (
@@ -115,8 +162,9 @@ export const LoanCard: React.FC<LoanCardProps> = ({
           <Text
             style={[
               styles.statusPillText,
-              isOverdue && { color: '#FECACA' },
-              isRepaid && { color: '#A7F3D0' },
+              { color: theme.colors.warningText },
+              isOverdue && { color: theme.colors.dangerText },
+              isRepaid && { color: theme.colors.successText },
             ]}
             numberOfLines={1}
           >
@@ -128,29 +176,49 @@ export const LoanCard: React.FC<LoanCardProps> = ({
         <View style={styles.actionsRow}>
           {onEdit ? (
             <TouchableOpacity
-              style={styles.editButton}
+              style={[
+                styles.editButton,
+                {
+                  backgroundColor: theme.colors.actionEditBg,
+                  borderColor: theme.colors.actionEditBorder,
+                },
+              ]}
               onPress={() => onEdit(loan)}
               activeOpacity={0.7}
             >
-              <Pencil size={12} color={theme.colors.textMuted} style={{ marginRight: 4 }} />
-              <Text style={styles.editButtonText}>Edit</Text>
+              <Pencil size={12} color={theme.colors.actionEditText} style={{ marginRight: 4 }} />
+              <Text style={[styles.editButtonText, { color: theme.colors.actionEditText }]}>
+                Edit
+              </Text>
             </TouchableOpacity>
           ) : null}
 
           {fullReceiptUrl ? (
             <TouchableOpacity
-              style={styles.receiptButton}
+              style={[
+                styles.receiptButton,
+                {
+                  backgroundColor: theme.colors.actionReceiptBg,
+                  borderColor: theme.colors.actionReceiptBorder,
+                },
+              ]}
               onPress={() => onViewReceipt(fullReceiptUrl, loan.friendName)}
               activeOpacity={0.7}
             >
-              <Receipt size={13} color={theme.colors.primaryLight} style={{ marginRight: 4 }} />
-              <Text style={styles.receiptButtonText}>Receipt</Text>
+              <Receipt size={13} color={theme.colors.actionReceiptText} style={{ marginRight: 4 }} />
+              <Text style={[styles.receiptButtonText, { color: theme.colors.actionReceiptText }]}>
+                Receipt
+              </Text>
             </TouchableOpacity>
           ) : null}
 
           {!isRepaid ? (
             <TouchableOpacity
-              style={[styles.repayButton, isRepaying && styles.buttonDisabled]}
+              style={[
+                styles.repayButton,
+                { backgroundColor: theme.colors.primary },
+                isRepaying && styles.buttonDisabled,
+              ]}
               onPress={handleRepay}
               disabled={isRepaying}
               activeOpacity={0.8}
@@ -166,7 +234,7 @@ export const LoanCard: React.FC<LoanCardProps> = ({
             </TouchableOpacity>
           ) : (
             <View style={styles.repaidConfirmedRow}>
-              <Text style={styles.repaidConfirmedText}>
+              <Text style={[styles.repaidConfirmedText, { color: theme.colors.textDim }]}>
                 {loan.repaidAt ? `Paid ${formatDate(loan.repaidAt)}` : 'Repaid'}
               </Text>
             </View>
@@ -179,21 +247,16 @@ export const LoanCard: React.FC<LoanCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    padding: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
+    padding: 16,
+    marginBottom: 12,
     overflow: 'hidden',
-  },
-  overdueCard: {
-    borderColor: theme.colors.danger,
-    backgroundColor: '#1E161C', // Dark reddish tint
-  },
-  repaidCard: {
-    borderColor: theme.colors.borderLight,
-    opacity: 0.85,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   topRow: {
     flexDirection: 'row',
@@ -210,21 +273,13 @@ const styles = StyleSheet.create({
   avatar: {
     width: 44,
     height: 44,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: '#3730A3', // Indigo tint
+    borderRadius: 9999,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: theme.spacing.md,
+    marginRight: 12,
     flexShrink: 0,
   },
-  overdueAvatar: {
-    backgroundColor: theme.colors.dangerBg,
-  },
-  repaidAvatar: {
-    backgroundColor: theme.colors.successBg,
-  },
   avatarText: {
-    color: theme.colors.white,
     fontSize: 16,
     fontWeight: '800',
   },
@@ -235,39 +290,34 @@ const styles = StyleSheet.create({
   friendName: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.colors.text,
   },
   dateSubtext: {
     fontSize: 12,
-    color: theme.colors.textMuted,
     marginTop: 2,
   },
   amountBlock: {
     alignItems: 'flex-end',
-    marginLeft: theme.spacing.sm,
+    marginLeft: 8,
     flexShrink: 0,
   },
   amountText: {
     fontSize: 18,
     fontWeight: '800',
-    color: theme.colors.text,
   },
   notesContainer: {
-    marginTop: theme.spacing.sm,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    backgroundColor: '#0F172A',
-    borderRadius: theme.borderRadius.sm,
+    marginTop: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 6,
+    borderWidth: 1,
   },
   notesText: {
     fontSize: 12,
-    color: theme.colors.textMuted,
     fontStyle: 'italic',
   },
   divider: {
     height: 1,
-    backgroundColor: theme.colors.border,
-    marginVertical: theme.spacing.md,
+    marginVertical: 12,
   },
   bottomRow: {
     flexDirection: 'row',
@@ -281,20 +331,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: theme.borderRadius.full,
-    backgroundColor: theme.colors.warningBg,
+    borderRadius: 9999,
     flexShrink: 1,
-  },
-  overduePill: {
-    backgroundColor: theme.colors.dangerBg,
-  },
-  repaidPill: {
-    backgroundColor: theme.colors.successBg,
   },
   statusPillText: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#FDE68A',
     flexShrink: 1,
   },
   actionsRow: {
@@ -310,13 +352,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 6,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: '#0F172A',
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: theme.colors.borderLight,
   },
   editButtonText: {
-    color: theme.colors.textMuted,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -325,13 +364,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 6,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: '#1E1B4B',
+    borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#3730A3',
   },
   receiptButtonText: {
-    color: theme.colors.primaryLight,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -340,14 +376,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: theme.borderRadius.sm,
-    backgroundColor: theme.colors.primary,
+    borderRadius: 6,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   repayButtonText: {
-    color: theme.colors.white,
+    color: '#FFFFFF',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -356,7 +391,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   repaidConfirmedText: {
-    color: theme.colors.textDim,
     fontSize: 12,
     fontWeight: '500',
   },

@@ -8,209 +8,306 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  TouchableWithoutFeedback,
-  Keyboard,
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAuth } from '../context/AuthContext';
 import { sendOtp, verifyOtp } from '../api/auth';
-import { theme } from '../utils/theme';
-import { ShieldCheck, Phone, KeyRound, ArrowRight, RefreshCw } from 'lucide-react-native';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import {
+  ShieldCheck,
+  Phone,
+  KeyRound,
+  ArrowRight,
+  RefreshCw,
+  Sun,
+  Moon,
+} from 'lucide-react-native';
 
 export const LoginScreen: React.FC = () => {
   const { login } = useAuth();
+  const { theme, isDark, toggleTheme } = useTheme();
 
-  const [phone, setPhone] = useState('+919999999999');
-  const [code, setCode] = useState('');
   const [step, setStep] = useState<'PHONE' | 'OTP'>('PHONE');
-
+  const [phone, setPhone] = useState('+919999999999'); // Pre-fill seeded test phone
+  const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Send OTP
   const handleSendOtp = async () => {
-    Keyboard.dismiss();
-    setErrorMessage(null);
-
-    const trimmedPhone = phone.trim();
-    if (!trimmedPhone.startsWith('+')) {
-      setErrorMessage('Phone number must start with country code (e.g. +919999999999)');
+    const trimmed = phone.trim();
+    if (!trimmed) {
+      setErrorMessage('Please enter your phone number');
+      return;
+    }
+    if (!/^\+[1-9]\d{6,14}$/.test(trimmed)) {
+      setErrorMessage('Phone must be in E.164 format (e.g. +919999999999)');
       return;
     }
 
     setIsLoading(true);
+    setErrorMessage(null);
     try {
-      await sendOtp(trimmedPhone);
+      await sendOtp(trimmed);
       setStep('OTP');
     } catch (err: any) {
-      setErrorMessage(err.message || 'Failed to send OTP. Please check server connection.');
+      setErrorMessage(err.message || 'Failed to send OTP. Is the backend server running?');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Verify OTP
   const handleVerifyOtp = async () => {
-    Keyboard.dismiss();
-    setErrorMessage(null);
-
-    const trimmedCode = code.trim();
-    if (trimmedCode.length !== 6) {
-      setErrorMessage('Please enter the full 6-digit OTP code');
+    const trimmedOtp = otp.trim();
+    if (trimmedOtp.length !== 6) {
+      setErrorMessage('Please enter the 6-digit verification code');
       return;
     }
 
     setIsLoading(true);
+    setErrorMessage(null);
     try {
-      const result = await verifyOtp(phone.trim(), trimmedCode);
-      await login(result.token, result.user);
+      const response = await verifyOtp(phone.trim(), trimmedOtp);
+      await login(response.token, response.user);
     } catch (err: any) {
-      setErrorMessage(err.message || 'Invalid or expired OTP. Try again.');
+      setErrorMessage(err.message || 'Invalid or expired OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardContainer}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* Header / Brand */}
-            <View style={styles.brandContainer}>
-              <View style={styles.logoBadge}>
-                <ShieldCheck size={36} color={theme.colors.primary} />
-              </View>
-              <Text style={styles.brandTitle}>MiniLedger</Text>
-              <Text style={styles.brandSubtitle}>
-                Track loans lent to friends with zero friction
-              </Text>
-            </View>
-
-            {/* Assessment Helper Notice */}
-            <View style={styles.assessmentNotice}>
-              <Text style={styles.noticeTitle}>📋 Assessment Mode</Text>
-              <Text style={styles.noticeBody}>
-                Mock OTP will be printed directly in your backend terminal output upon
-                request.
-              </Text>
-            </View>
-
-            {/* Error Message Banner */}
-            {errorMessage && (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{errorMessage}</Text>
-              </View>
-            )}
-
-            {/* Card Form */}
-            <View style={styles.card}>
-              {step === 'PHONE' ? (
-                <>
-                  <Text style={styles.label}>Mobile Phone Number</Text>
-                  <View style={styles.inputContainer}>
-                    <Phone size={20} color={theme.colors.textMuted} style={styles.inputIcon} />
-                    <TextInput
-                      style={styles.input}
-                      placeholder="+919999999999"
-                      placeholderTextColor={theme.colors.placeholder}
-                      value={phone}
-                      onChangeText={(val) => {
-                        setPhone(val);
-                        if (errorMessage) setErrorMessage(null);
-                      }}
-                      keyboardType="phone-pad"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
-                  </View>
-                  <Text style={styles.helperText}>
-                    Include international country code prefix (e.g. +91 or +1)
-                  </Text>
-
-                  <TouchableOpacity
-                    style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
-                    onPress={handleSendOtp}
-                    disabled={isLoading}
-                    activeOpacity={0.8}
-                  >
-                    {isLoading ? (
-                      <ActivityIndicator color={theme.colors.white} />
-                    ) : (
-                      <>
-                        <Text style={styles.primaryButtonText}>Send Mock OTP</Text>
-                        <ArrowRight size={18} color={theme.colors.white} />
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          {/* Top Bar with Theme Toggle */}
+          <View style={styles.topBar}>
+            <View style={{ flex: 1 }} />
+            <TouchableOpacity
+              style={[
+                styles.themeToggleBtn,
+                {
+                  backgroundColor: theme.colors.card,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+              onPress={toggleTheme}
+              activeOpacity={0.7}
+              accessibilityLabel={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+            >
+              {isDark ? (
+                <Sun size={18} color={theme.colors.warning} />
               ) : (
-                <>
-                  <View style={styles.otpHeaderRow}>
-                    <View>
-                      <Text style={styles.label}>Enter 6-digit Code</Text>
-                      <Text style={styles.otpSentToText}>Sent to {phone}</Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => {
-                        setStep('PHONE');
-                        setCode('');
-                        setErrorMessage(null);
-                      }}
-                      style={styles.changePhoneButton}
-                    >
-                      <Text style={styles.changePhoneText}>Edit phone</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.inputContainer}>
-                    <KeyRound size={20} color={theme.colors.textMuted} style={styles.inputIcon} />
-                    <TextInput
-                      style={[styles.input, styles.otpInput]}
-                      placeholder="123456"
-                      placeholderTextColor={theme.colors.placeholder}
-                      value={code}
-                      onChangeText={(val) => {
-                        setCode(val);
-                        if (errorMessage) setErrorMessage(null);
-                      }}
-                      keyboardType="number-pad"
-                      maxLength={6}
-                      autoFocus
-                    />
-                  </View>
-
-                  <TouchableOpacity
-                    style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
-                    onPress={handleVerifyOtp}
-                    disabled={isLoading}
-                    activeOpacity={0.8}
-                  >
-                    {isLoading ? (
-                      <ActivityIndicator color={theme.colors.white} />
-                    ) : (
-                      <Text style={styles.primaryButtonText}>Verify & Continue</Text>
-                    )}
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.resendButton}
-                    onPress={handleSendOtp}
-                    disabled={isLoading}
-                  >
-                    <RefreshCw size={14} color={theme.colors.primaryLight} style={{ marginRight: 6 }} />
-                    <Text style={styles.resendButtonText}>Resend code</Text>
-                  </TouchableOpacity>
-                </>
+                <Moon size={18} color={theme.colors.primary} />
               )}
+            </TouchableOpacity>
+          </View>
+
+          {/* App Branding */}
+          <View style={styles.brandContainer}>
+            <View
+              style={[
+                styles.logoBadge,
+                {
+                  backgroundColor: theme.colors.card,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+            >
+              <ShieldCheck size={36} color={theme.colors.primary} />
             </View>
-          </ScrollView>
-        </TouchableWithoutFeedback>
+            <Text style={[styles.brandTitle, { color: theme.colors.text }]}>MiniLedger</Text>
+            <Text style={[styles.brandSubtitle, { color: theme.colors.textMuted }]}>
+              Effortless personal debt & loan tracking
+            </Text>
+          </View>
+
+          {/* Assessment Mock Notice */}
+          <View
+            style={[
+              styles.assessmentNotice,
+              {
+                backgroundColor: theme.colors.noticeBg,
+                borderColor: theme.colors.noticeBorder,
+              },
+            ]}
+          >
+            <Text style={[styles.noticeTitle, { color: theme.colors.noticeTitle }]}>
+              Mock Authentication Active
+            </Text>
+            <Text style={[styles.noticeBody, { color: theme.colors.noticeText }]}>
+              Enter any phone number. The 6-digit OTP code will print directly in your backend terminal log upon
+              request.
+            </Text>
+          </View>
+
+          {/* Error Message Banner */}
+          {errorMessage && (
+            <View
+              style={[
+                styles.errorBox,
+                {
+                  backgroundColor: theme.colors.dangerBg,
+                  borderColor: theme.colors.dangerBorder,
+                },
+              ]}
+            >
+              <Text style={[styles.errorText, { color: theme.colors.dangerText }]}>{errorMessage}</Text>
+            </View>
+          )}
+
+          {/* Card Form */}
+          <View
+            style={[
+              styles.card,
+              {
+                backgroundColor: theme.colors.card,
+                borderColor: theme.colors.border,
+              },
+            ]}
+          >
+            {step === 'PHONE' ? (
+              <>
+                <Text style={[styles.label, { color: theme.colors.text }]}>Mobile Phone Number</Text>
+                <View
+                  style={[
+                    styles.inputContainer,
+                    {
+                      backgroundColor: theme.colors.surfaceInput,
+                      borderColor: theme.colors.border,
+                    },
+                  ]}
+                >
+                  <Phone size={20} color={theme.colors.textMuted} style={styles.inputIcon} />
+                  <TextInput
+                    style={[styles.input, { color: theme.colors.text }]}
+                    placeholder="+919999999999"
+                    placeholderTextColor={theme.colors.placeholder}
+                    value={phone}
+                    onChangeText={(val) => {
+                      setPhone(val);
+                      if (errorMessage) setErrorMessage(null);
+                    }}
+                    keyboardType="phone-pad"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                </View>
+                <Text style={[styles.helperText, { color: theme.colors.textDim }]}>
+                  Include international country code prefix (e.g. +91 or +1)
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.primaryButton,
+                    { backgroundColor: theme.colors.primary },
+                    isLoading && styles.buttonDisabled,
+                  ]}
+                  onPress={handleSendOtp}
+                  disabled={isLoading}
+                  activeOpacity={0.8}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color={theme.colors.white} />
+                  ) : (
+                    <>
+                      <Text style={styles.primaryButtonText}>Send Mock OTP</Text>
+                      <ArrowRight size={18} color={theme.colors.white} />
+                    </>
+                  )}
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <View style={styles.otpHeaderRow}>
+                  <View>
+                    <Text style={[styles.label, { color: theme.colors.text }]}>Enter 6-digit Code</Text>
+                    <Text style={[styles.otpSentToText, { color: theme.colors.textMuted }]}>
+                      Sent to {phone}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setStep('PHONE');
+                      setOtp('');
+                      setErrorMessage(null);
+                    }}
+                    style={styles.changePhoneButton}
+                  >
+                    <Text style={[styles.changePhoneText, { color: theme.colors.primaryLight }]}>
+                      Change
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View
+                  style={[
+                    styles.inputContainer,
+                    {
+                      backgroundColor: theme.colors.surfaceInput,
+                      borderColor: theme.colors.border,
+                    },
+                  ]}
+                >
+                  <KeyRound size={20} color={theme.colors.textMuted} style={styles.inputIcon} />
+                  <TextInput
+                    style={[styles.input, styles.otpInput, { color: theme.colors.text }]}
+                    placeholder="000000"
+                    placeholderTextColor={theme.colors.placeholder}
+                    value={otp}
+                    onChangeText={(val) => {
+                      setOtp(val.replace(/\D/g, '').slice(0, 6));
+                      if (errorMessage) setErrorMessage(null);
+                    }}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    autoFocus
+                  />
+                </View>
+                <Text style={[styles.helperText, { color: theme.colors.textDim }]}>
+                  Check the backend server console window for the printed OTP
+                </Text>
+
+                <TouchableOpacity
+                  style={[
+                    styles.primaryButton,
+                    { backgroundColor: theme.colors.primary },
+                    isLoading && styles.buttonDisabled,
+                  ]}
+                  onPress={handleVerifyOtp}
+                  disabled={isLoading}
+                  activeOpacity={0.8}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator color={theme.colors.white} />
+                  ) : (
+                    <>
+                      <Text style={styles.primaryButtonText}>Verify & Continue</Text>
+                      <ArrowRight size={18} color={theme.colors.white} />
+                    </>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.resendButton}
+                  onPress={handleSendOtp}
+                  disabled={isLoading}
+                  activeOpacity={0.7}
+                >
+                  <RefreshCw size={14} color={theme.colors.primaryLight} style={{ marginRight: 6 }} />
+                  <Text style={[styles.resendButtonText, { color: theme.colors.primaryLight }]}>
+                    Resend Code
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -219,114 +316,112 @@ export const LoginScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   keyboardContainer: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: theme.spacing.xl,
+    padding: 20,
+    justifyContent: 'center',
+  },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 8,
+  },
+  themeToggleBtn: {
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
     justifyContent: 'center',
   },
   brandContainer: {
     alignItems: 'center',
-    marginBottom: theme.spacing.xl,
+    marginBottom: 20,
   },
   logoBadge: {
     width: 64,
     height: 64,
-    borderRadius: theme.borderRadius.xl,
-    backgroundColor: theme.colors.card,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: theme.colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: 12,
   },
   brandTitle: {
     fontSize: 28,
     fontWeight: '800',
-    color: theme.colors.text,
     letterSpacing: -0.5,
   },
   brandSubtitle: {
     fontSize: 14,
-    color: theme.colors.textMuted,
     marginTop: 4,
     textAlign: 'center',
   },
   assessmentNotice: {
-    backgroundColor: '#1E1B4B', // Dark indigo tint
-    borderRadius: theme.borderRadius.md,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#3730A3',
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    padding: 12,
+    marginBottom: 16,
   },
   noticeTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: theme.colors.primaryLight,
     marginBottom: 2,
   },
   noticeBody: {
     fontSize: 12,
-    color: '#C7D2FE',
     lineHeight: 18,
   },
   errorBox: {
-    backgroundColor: theme.colors.dangerBg,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.danger,
-    padding: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    padding: 12,
+    marginBottom: 16,
   },
   errorText: {
-    color: '#FECACA',
     fontSize: 13,
     fontWeight: '500',
   },
   card: {
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    padding: theme.spacing.xl,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: 4,
   },
   otpHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'baseline',
-    marginBottom: theme.spacing.xs,
+    marginBottom: 4,
   },
   otpSentToText: {
     fontSize: 12,
-    color: theme.colors.textMuted,
   },
   changePhoneButton: {
     paddingVertical: 2,
   },
   changePhoneText: {
-    color: theme.colors.primaryLight,
     fontSize: 12,
     fontWeight: '600',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0F172A',
-    borderRadius: theme.borderRadius.md,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: theme.colors.borderLight,
-    paddingHorizontal: theme.spacing.md,
+    paddingHorizontal: 12,
     marginTop: 6,
     height: 48,
   },
@@ -335,7 +430,6 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: theme.colors.text,
     fontSize: 15,
     height: '100%',
   },
@@ -346,24 +440,22 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 11,
-    color: theme.colors.textDim,
     marginTop: 6,
-    marginBottom: theme.spacing.lg,
+    marginBottom: 16,
   },
   primaryButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: 10,
     height: 48,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: theme.spacing.md,
+    marginTop: 12,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   primaryButtonText: {
-    color: theme.colors.white,
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
     marginRight: 6,
@@ -372,11 +464,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: theme.spacing.lg,
+    marginTop: 16,
     paddingVertical: 4,
   },
   resendButtonText: {
-    color: theme.colors.primaryLight,
     fontSize: 13,
     fontWeight: '600',
   },
