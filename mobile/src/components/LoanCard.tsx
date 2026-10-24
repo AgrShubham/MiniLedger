@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { Loan } from '../api/loans';
 import { getFullMediaUrl } from '../api/client';
@@ -32,7 +33,7 @@ export const LoanCard: React.FC<LoanCardProps> = ({
   onViewReceipt,
   onEdit,
 }) => {
-  const { theme } = useTheme();
+  const { theme, animatedColors } = useTheme();
   const [isRepaying, setIsRepaying] = useState(false);
 
   const isRepaid = loan.status === 'REPAID';
@@ -52,19 +53,14 @@ export const LoanCard: React.FC<LoanCardProps> = ({
   };
 
   return (
-    <View
+    <Animated.View
       style={[
         styles.card,
         {
-          backgroundColor: theme.colors.card,
-          borderColor: theme.colors.border,
-        },
-        isOverdue && {
-          backgroundColor: theme.colors.dangerCard,
-          borderColor: theme.colors.dangerBorder,
+          backgroundColor: isOverdue ? animatedColors.dangerCard : animatedColors.card,
+          borderColor: isOverdue ? animatedColors.dangerBorder : animatedColors.border,
         },
         isRepaid && {
-          borderColor: theme.colors.borderLight,
           opacity: 0.88,
         },
       ]}
@@ -241,7 +237,7 @@ export const LoanCard: React.FC<LoanCardProps> = ({
           )}
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 

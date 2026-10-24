@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Animated } from 'react-native';
 import { LoansSummary } from '../api/loans';
 import { formatCurrency } from '../utils/format';
 import { useTheme } from '../context/ThemeContext';
@@ -11,22 +11,22 @@ interface SummaryCardProps {
 }
 
 export const SummaryCard: React.FC<SummaryCardProps> = ({ summary, isLoading }) => {
-  const { theme } = useTheme();
+  const { theme, animatedColors } = useTheme();
 
   if (isLoading && !summary) {
     return (
-      <View
+      <Animated.View
         style={[
           styles.card,
           styles.loadingCard,
-          { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
+          { backgroundColor: animatedColors.card, borderColor: animatedColors.border },
         ]}
       >
         <ActivityIndicator color={theme.colors.primary} size="small" />
         <Text style={[styles.loadingText, { color: theme.colors.textMuted }]}>
           Loading summary...
         </Text>
-      </View>
+      </Animated.View>
     );
   }
 
@@ -36,12 +36,12 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ summary, isLoading }) 
   const counts = summary?.counts ?? { total: 0, repaid: 0, pending: 0, overdue: 0 };
 
   return (
-    <View
+    <Animated.View
       style={[
         styles.card,
         {
-          backgroundColor: theme.colors.card,
-          borderColor: theme.colors.border,
+          backgroundColor: animatedColors.card,
+          borderColor: animatedColors.border,
         },
       ]}
     >
@@ -177,7 +177,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ summary, isLoading }) 
           </Text>
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 };
 

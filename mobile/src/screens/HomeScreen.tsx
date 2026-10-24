@@ -8,6 +8,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -20,19 +21,18 @@ import { LoanCard } from '../components/LoanCard';
 import { AddLoanModal } from '../components/AddLoanModal';
 import { EditLoanModal } from '../components/EditLoanModal';
 import { ReceiptViewerModal } from '../components/ReceiptViewerModal';
+import { ThemeToggleButton } from '../components/ThemeToggleButton';
 import {
   Plus,
   LogOut,
   ShieldCheck,
   Inbox,
   AlertCircle,
-  Sun,
-  Moon,
 } from 'lucide-react-native';
 
 export const HomeScreen: React.FC = () => {
   const { user, logout } = useAuth();
-  const { theme, isDark, toggleTheme } = useTheme();
+  const { theme, animatedColors } = useTheme();
   const queryClient = useQueryClient();
 
   const [filter, setFilter] = useState<FilterStatus>('ALL');
@@ -98,195 +98,180 @@ export const HomeScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
-      {/* Top Header */}
-      <View
-        style={[
-          styles.header,
-          {
-            backgroundColor: theme.colors.card,
-            borderBottomColor: theme.colors.border,
-          },
-        ]}
-      >
-        <View style={styles.headerBrand}>
-          <View
-            style={[
-              styles.logoBadge,
-              {
-                backgroundColor: theme.colors.primaryBg,
-                borderColor: theme.colors.border,
-              },
-            ]}
-          >
-            <ShieldCheck size={20} color={theme.colors.primary} />
+    <Animated.View style={[{ flex: 1, backgroundColor: animatedColors.background }]}>
+      <SafeAreaView style={styles.safeArea}>
+        {/* Top Header */}
+        <Animated.View
+          style={[
+            styles.header,
+            {
+              backgroundColor: animatedColors.card,
+              borderBottomColor: animatedColors.border,
+            },
+          ]}
+        >
+          <View style={styles.headerBrand}>
+            <Animated.View
+              style={[
+                styles.logoBadge,
+                {
+                  backgroundColor: animatedColors.primaryBg,
+                  borderColor: animatedColors.border,
+                },
+              ]}
+            >
+              <ShieldCheck size={20} color={theme.colors.primary} />
+            </Animated.View>
+            <View>
+              <Text style={[styles.brandTitle, { color: theme.colors.text }]}>MiniLedger</Text>
+              <Text style={[styles.userPhoneText, { color: theme.colors.textMuted }]}>
+                {user?.phone}
+              </Text>
+            </View>
           </View>
-          <View>
-            <Text style={[styles.brandTitle, { color: theme.colors.text }]}>MiniLedger</Text>
-            <Text style={[styles.userPhoneText, { color: theme.colors.textMuted }]}>
-              {user?.phone}
-            </Text>
+
+          <View style={styles.headerActions}>
+            {/* Smooth Animated Theme Toggle Button */}
+            <ThemeToggleButton />
+
+            <TouchableOpacity
+              style={[styles.headerAddBtn, { backgroundColor: theme.colors.primary }]}
+              onPress={() => setIsAddModalOpen(true)}
+              activeOpacity={0.8}
+            >
+              <Plus size={18} color={theme.colors.white} style={{ marginRight: 4 }} />
+              <Text style={styles.headerAddBtnText}>Add</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.iconBtn,
+                {
+                  backgroundColor: theme.colors.surfaceMuted,
+                  borderColor: theme.colors.border,
+                },
+              ]}
+              onPress={logout}
+              activeOpacity={0.7}
+              accessibilityLabel="Log out"
+            >
+              <LogOut size={17} color={theme.colors.textMuted} />
+            </TouchableOpacity>
           </View>
-        </View>
+        </Animated.View>
 
-        <View style={styles.headerActions}>
-          {/* Theme Toggle Button */}
-          <TouchableOpacity
-            style={[
-              styles.iconBtn,
-              {
-                backgroundColor: theme.colors.surfaceMuted,
-                borderColor: theme.colors.border,
-              },
-            ]}
-            onPress={toggleTheme}
-            activeOpacity={0.7}
-            accessibilityLabel={`Switch to ${isDark ? 'light' : 'dark'} mode`}
-          >
-            {isDark ? (
-              <Sun size={17} color={theme.colors.warning} />
-            ) : (
-              <Moon size={17} color={theme.colors.primary} />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.headerAddBtn, { backgroundColor: theme.colors.primary }]}
-            onPress={() => setIsAddModalOpen(true)}
-            activeOpacity={0.8}
-          >
-            <Plus size={18} color={theme.colors.white} style={{ marginRight: 4 }} />
-            <Text style={styles.headerAddBtnText}>Add</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.iconBtn,
-              {
-                backgroundColor: theme.colors.surfaceMuted,
-                borderColor: theme.colors.border,
-              },
-            ]}
-            onPress={logout}
-            activeOpacity={0.7}
-            accessibilityLabel="Log out"
-          >
-            <LogOut size={17} color={theme.colors.textMuted} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Main List & Dashboard Content */}
-      <FlatList
-        data={loans || []}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <LoanCard
-            loan={item}
-            onMarkRepaid={handleMarkRepaid}
-            onViewReceipt={(url, friendName) => setSelectedReceipt({ url, friendName })}
-            onEdit={(loan) => setEditingLoan(loan)}
-          />
-        )}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={handleRefresh}
-            tintColor={theme.colors.primary}
-            colors={[theme.colors.primary]}
-          />
-        }
-        ListHeaderComponent={
-          <>
-            {/* Top Summary Card */}
-            <SummaryCard summary={summary} isLoading={isSummaryLoading} />
-
-            {/* Filter Tabs */}
-            <FilterTabs
-              currentFilter={filter}
-              onSelectFilter={setFilter}
-              counts={summary?.counts}
+        {/* Main List & Dashboard Content */}
+        <FlatList
+          data={loans || []}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <LoanCard
+              loan={item}
+              onMarkRepaid={handleMarkRepaid}
+              onViewReceipt={(url, friendName) => setSelectedReceipt({ url, friendName })}
+              onEdit={(loan) => setEditingLoan(loan)}
             />
-          </>
-        }
-        ListEmptyComponent={
-          isLoansLoading ? (
-            <View style={styles.emptyContainer}>
-              <ActivityIndicator size="small" color={theme.colors.primary} />
-              <Text style={[styles.emptySub, { color: theme.colors.textMuted }]}>
-                Loading ledger entries...
-              </Text>
-            </View>
-          ) : isLoansError ? (
-            <View style={styles.emptyContainer}>
-              <AlertCircle size={36} color={theme.colors.danger} />
-              <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
-                Failed to load loans
-              </Text>
-              <Text style={[styles.emptySub, { color: theme.colors.textMuted }]}>
-                {(loansError as any)?.message || 'Please check your connection and try again.'}
-              </Text>
-              <TouchableOpacity
-                style={[
-                  styles.retryBtn,
-                  {
-                    backgroundColor: theme.colors.card,
-                    borderColor: theme.colors.borderLight,
-                  },
-                ]}
-                onPress={handleRefresh}
-              >
-                <Text style={[styles.retryBtnText, { color: theme.colors.text }]}>Retry</Text>
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Inbox size={40} color={theme.colors.textDim} />
-              <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
-                {filter === 'ALL'
-                  ? 'No loans recorded yet'
-                  : `No ${filter.toLowerCase()} loans found`}
-              </Text>
-              <Text style={[styles.emptySub, { color: theme.colors.textMuted }]}>
-                Tap the "+ Add" button to record money lent to a friend.
-              </Text>
-              {filter === 'ALL' && (
+          )}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={handleRefresh}
+              tintColor={theme.colors.primary}
+              colors={[theme.colors.primary]}
+            />
+          }
+          ListHeaderComponent={
+            <>
+              {/* Top Summary Card */}
+              <SummaryCard summary={summary} isLoading={isSummaryLoading} />
+
+              {/* Filter Tabs */}
+              <FilterTabs
+                currentFilter={filter}
+                onSelectFilter={setFilter}
+                counts={summary?.counts}
+              />
+            </>
+          }
+          ListEmptyComponent={
+            isLoansLoading ? (
+              <View style={styles.emptyContainer}>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+                <Text style={[styles.emptySub, { color: theme.colors.textMuted }]}>
+                  Loading ledger entries...
+                </Text>
+              </View>
+            ) : isLoansError ? (
+              <View style={styles.emptyContainer}>
+                <AlertCircle size={36} color={theme.colors.danger} />
+                <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
+                  Failed to load loans
+                </Text>
+                <Text style={[styles.emptySub, { color: theme.colors.textMuted }]}>
+                  {(loansError as any)?.message || 'Please check your connection and try again.'}
+                </Text>
                 <TouchableOpacity
-                  style={[styles.addFirstBtn, { backgroundColor: theme.colors.primary }]}
-                  onPress={() => setIsAddModalOpen(true)}
+                  style={[
+                    styles.retryBtn,
+                    {
+                      backgroundColor: theme.colors.card,
+                      borderColor: theme.colors.borderLight,
+                    },
+                  ]}
+                  onPress={handleRefresh}
                 >
-                  <Plus size={16} color={theme.colors.white} style={{ marginRight: 6 }} />
-                  <Text style={styles.addFirstBtnText}>Add First Loan</Text>
+                  <Text style={[styles.retryBtnText, { color: theme.colors.text }]}>Retry</Text>
                 </TouchableOpacity>
-              )}
-            </View>
-          )
-        }
-      />
+              </View>
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Inbox size={40} color={theme.colors.textDim} />
+                <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
+                  {filter === 'ALL'
+                    ? 'No loans recorded yet'
+                    : `No ${filter.toLowerCase()} loans found`}
+                </Text>
+                <Text style={[styles.emptySub, { color: theme.colors.textMuted }]}>
+                  Tap the "+ Add" button to record money lent to a friend.
+                </Text>
+                {filter === 'ALL' && (
+                  <TouchableOpacity
+                    style={[styles.addFirstBtn, { backgroundColor: theme.colors.primary }]}
+                    onPress={() => setIsAddModalOpen(true)}
+                  >
+                    <Plus size={16} color={theme.colors.white} style={{ marginRight: 6 }} />
+                    <Text style={styles.addFirstBtnText}>Add First Loan</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )
+          }
+        />
 
-      {/* Add Loan Modal */}
-      <AddLoanModal
-        visible={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSuccess={handleAddSuccess}
-      />
+        {/* Add Loan Modal */}
+        <AddLoanModal
+          visible={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSuccess={handleAddSuccess}
+        />
 
-      {/* Edit Loan Modal */}
-      <EditLoanModal
-        loan={editingLoan}
-        visible={!!editingLoan}
-        onClose={() => setEditingLoan(null)}
-        onSuccess={handleEditSuccess}
-      />
+        {/* Edit Loan Modal */}
+        <EditLoanModal
+          loan={editingLoan}
+          visible={!!editingLoan}
+          onClose={() => setEditingLoan(null)}
+          onSuccess={handleEditSuccess}
+        />
 
-      {/* Fullscreen Receipt Viewer */}
-      <ReceiptViewerModal
-        imageUrl={selectedReceipt?.url || null}
-        friendName={selectedReceipt?.friendName}
-        onClose={() => setSelectedReceipt(null)}
-      />
-    </SafeAreaView>
+        {/* Fullscreen Receipt Viewer */}
+        <ReceiptViewerModal
+          imageUrl={selectedReceipt?.url || null}
+          friendName={selectedReceipt?.friendName}
+          onClose={() => setSelectedReceipt(null)}
+        />
+      </SafeAreaView>
+    </Animated.View>
   );
 };
 
